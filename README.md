@@ -1,6 +1,6 @@
 # AI Ticket Triage Agent
 
-![CI](https://github.com/thedakshjangid/ai-ticket-triage-agent/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/thedakshjangid/AI-ticket-triage-agent/actions/workflows/ci.yml/badge.svg)
 
 Support inboxes fill up with messages that all look the same at first glance: a password reset, a double charge, a whole site going down. Someone has to read each one, decide how urgent it is and route it. This project automates that first pass.
 
