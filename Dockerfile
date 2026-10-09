@@ -1,4 +1,5 @@
-FROM python:3.11-slim
+# Official Python image via the AWS public mirror (avoids Docker Hub pull limits)
+FROM public.ecr.aws/docker/library/python:3.11-slim
 
 WORKDIR /app
 COPY requirements.txt .
