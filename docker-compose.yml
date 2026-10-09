@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: triage
+      POSTGRES_PASSWORD: triage
+      POSTGRES_DB: triage
+    ports:
+      - "5432:5432"   # so the MCP server on your machine can reach it
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triage"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://triage:triage@db:5432/triage
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  n8n:
+    image: n8nio/n8n:1.123.84  # version the workflow was tested with
+    ports:
+      - "5678:5678"
+    environment:
+      # The workflow's Code node signs requests with Node's crypto module and reads the secret from env.
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      TRIAGE_URL: http://api:8000/webhooks/inbound
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  n8n_data:

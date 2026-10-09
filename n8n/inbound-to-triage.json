@@ -1,0 +1,70 @@
+{
+  "name": "Inbound message -> AI triage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-message",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "5b0d7f8a-1c1e-4b7e-9a51-2f0f6f7d1a01",
+      "name": "Inbound Message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "8e2c4a3b-6f4d-4a9e-b1c2-7d3e5f6a8b90"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Normalise whatever arrived (form post, email trigger, another app) into the triage API's shape,\n// then sign it with HMAC-SHA256 so the API can check it really came from us.\nconst crypto = require('crypto');\n\nconst src = ($json.body && typeof $json.body === 'object') ? $json.body : $json;\nconst payload = {\n  external_id: String(src.id ?? src.messageId ?? src.external_id ?? `n8n-${$execution.id}-${$itemIndex}`),\n  sender_email: String(src.from ?? src.email ?? src.sender_email ?? '').trim(),\n  subject: String(src.subject ?? ''),\n  body: String(src.text ?? src.message ?? src.body ?? ''),\n  source: 'n8n',\n};\n\nconst raw = JSON.stringify(payload);\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst signature = crypto.createHmac('sha256', $env.WEBHOOK_SECRET).update(`${ts}.${raw}`).digest('hex');\n\nreturn { json: { raw, ts, signature: `sha256=${signature}` } };"
+      },
+      "id": "a3f1c2d4-2b3c-4d5e-8f90-1a2b3c4d5e02",
+      "name": "Normalise & Sign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TRIAGE_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Timestamp", "value": "={{ $json.ts }}" },
+            { "name": "X-Signature", "value": "={{ $json.signature }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.raw }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "c7d8e9f0-3c4d-4e5f-9a01-2b3c4d5e6f03",
+      "name": "Send to Triage API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 0],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Inbound Message": {
+      "main": [[{ "node": "Normalise & Sign", "type": "main", "index": 0 }]]
+    },
+    "Normalise & Sign": {
+      "main": [[{ "node": "Send to Triage API", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
