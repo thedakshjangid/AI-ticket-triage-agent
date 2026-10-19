@@ -119,3 +119,8 @@ def test_message_is_wrapped_as_untrusted_data_and_truncated(session, monkeypatch
     assert "<customer_message>" in sent and "</customer_message>" in sent
     assert "[...message truncated...]" in sent
     assert "x" * 100 not in sent
+    
+    def test_refund_request_category_is_accepted(session):
+        ticket = make_ticket(session)
+        outcome = run_agent(session, ticket, ScriptedProvider([submit(dict(VALID, category="refund_request"))]))
+        assert outcome.result.category == "refund_request"

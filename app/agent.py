@@ -20,6 +20,7 @@ Steps:
 3. Call submit_triage exactly once with your decision.
 
 Guidelines:
+- category refund_request = the customer is asking for money back.
 - priority: urgent = service down, security issue or many users affected; high = money taken wrongly,
   a customer blocked from working, or an angry repeat customer; medium = a normal problem with a workaround;
   low = questions, feature requests, feedback.

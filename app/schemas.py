@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-Category = Literal["billing", "technical_issue", "account_access", "feature_request", "complaint", "other"]
+Category = Literal["billing", "technical_issue", "account_access", "feature_request", "complaint", "refund_request", "other"]
 Priority = Literal["low", "medium", "high", "urgent"]
 TicketStatus = Literal["received", "triaged", "needs_review", "triage_failed", "resolved"]
 
